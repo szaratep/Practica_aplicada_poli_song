@@ -85,7 +85,6 @@ public class cancionDAO {
 
             if (rs.next()) {
                 song = new cancion(
-                        rs.getInt("id_cancion"),
                         rs.getString("nombre"),
                         rs.getDouble("duracion"),
                         rs.getDouble("precio"),

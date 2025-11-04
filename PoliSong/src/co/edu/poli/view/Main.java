@@ -1,184 +1,78 @@
 package co.edu.poli.view;
 
 import java.util.Date;
-
 import co.edu.poli.datos.*;
 import co.edu.poli.model.*;
 
 public class Main {
-	public static void main(String[] args) {
-       /*
-		System.out.println("=== INICIO DE PRUEBA DE LOS 13 DAOs ===");
+    public static void main(String[] args) {
+        System.out.println("===== INICIO PRUEBAS POLISONG =====");
 
-        // ---------- 1. CORREO ----------
-        correoDAO correoDAO = new correoDAO();
-        correo cAdmin = new correo("admin@gmail.com");
-        correo cUser = new correo("laura@gmail.com");
-        correo cProv = new correo("sony@music.com");
-        correoDAO.createCorreo(cAdmin);
-        correoDAO.createCorreo(cUser);
-        correoDAO.createCorreo(cProv);
-        correoDAO.readCorreo("admin@gmail.com");
+        // DAO Instances
+        correoDAO correoDao = new correoDAO();
+        administradorDAO adminDao = new administradorDAO();
+        usuarioDAO usuarioDao = new usuarioDAO();
+        proveedorDAO proveedorDao = new proveedorDAO();
+        cancionDAO cancionDao = new cancionDAO();
+        playlist_cancionDAO playlistCancionDao = new playlist_cancionDAO();
+        playListDAO playlistDao = new playListDAO();
+        discoMP3DAO mp3Dao = new discoMP3DAO();
+        discomp3_cancionDAO discoCancionDao = new discomp3_cancionDAO();
+        viniloDAO viniloDao = new viniloDAO();
+        vinilo_cancionDAO viniloCancionDao = new vinilo_cancionDAO();
 
-        // ---------- 2. ADMINISTRADOR ----------
-        administradorDAO adminDAO = new administradorDAO();
-        administrador admin = new administrador(1, "Carlos Ruiz", "admin@gmail.com", "admin123");
-        adminDAO.createAdmin(admin);
-        adminDAO.readAdmin(1);
-        admin.setNombre("Carlos Ruiz Actualizado");
-        adminDAO.updateAdmin(admin);
+        try {
 
-        // ---------- 3. USUARIO ----------
-        usuarioDAO userDAO = new usuarioDAO();
-        usuario user = new usuario(1, "Laura Gómez", "laura@gmail.com", "12345");
-        userDAO.createUsuario(user);
-        userDAO.readUsuario(1);
-        user.setNombre("Laura Gómez Actualizada");
-        userDAO.updateUsuario(user);
+            System.out.println("\n--- Creando correos ---");
+            correoDao.createCorreo(new correo("admin@polisong.com"));
+            correoDao.createCorreo(new correo("user@polisong.com"));
+            correoDao.createCorreo(new correo("proveedor@polisong.com"));
 
-        // ---------- 4. PROVEEDOR ----------
-        proveedorDAO provDAO = new proveedorDAO();
-        proveedor prov = new proveedor(1, "Sony Music", "sony@music.com", "clave123", 5);
-        provDAO.createProveedor(prov);
-        provDAO.readProveedor(1);
-        prov.setCalificaciones(10);
-        provDAO.updateProveedor(prov);
+            System.out.println("\n--- Creando administrador ---");
+            adminDao.createAdmin(new administrador(1, "Admin PoliSong", "admin@polisong.com", "adminpass"));
 
-        // ---------- 5. CANCIÓN ----------
-        cancionDAO cancionDAO = new cancionDAO();
-        cancion song = new cancion(1, "Billie Jean", 4.55, 5000.0, 8.4);
-        cancionDAO.createCancion(song);
-        cancionDAO.readCancion(1);
-        song.setPrecio(5500.0);
-        cancionDAO.updateCancion(song);
+            System.out.println("\n--- Creando usuario ---");
+            usuarioDao.createUsuario(new usuario(1, "Usuario Test", "user@polisong.com", "userpass"));
 
-        // ---------- 6. VINILO ----------
-        viniloDAO vinDAO = new viniloDAO();
-        vinilo vin = new vinilo(1, "Thriller", "Michael Jackson", 1982, 150000.0, 50, null);
-        vinDAO.createVinilo(vin);
-        vinDAO.readVinilo(1);
-        vin.setPrecio(155000.0);
-        vinDAO.updateVinilo(vin);
+            System.out.println("\n--- Creando proveedor ---");
+            proveedorDao.createProveedor(new proveedor(1, "Proveedor 1", "proveedor@polisong.com", "provpass", 5));
 
-        // ---------- 7. DISCO MP3 ----------
-        discoMP3DAO mp3DAO = new discoMP3DAO();
-        discoMP3 mp3 = new discoMP3(1, "Hits del 2025", new Date(), null);
-        mp3DAO.createMP3(mp3);
-        mp3DAO.readMP3(1);
-        mp3.setNombre("Hits Globales 2025");
-        mp3DAO.updateMP3(mp3);
+            System.out.println("\n--- Creando canciones ---");
+            int idC1 = cancionDao.createCancion(new cancion("Cancion A", 200, 3000, 5.0));
+            int idC2 = cancionDao.createCancion(new cancion("Cancion B", 180, 2500, 4.5));
 
-        // ---------- 8. CATALOGO ----------
-        catalogoDAO catDAO = new catalogoDAO();
-        catalogo cat = new catalogo(1, 1, 1, new Date()); // id_proveedor=1, id_vinilo=1
-        catDAO.createCatalogo(cat);
-        catDAO.readCatalogo(1);
-        cat.setId_vinilo(1);
-        catDAO.updateCatalogo(cat);
+            System.out.println("\n--- Creando Playlist ---");
+            playlistDao.createPlayList(new playList(1, 1, "Mi Playlist", true));
+            playlistCancionDao.addCancionToPlaylist(1, idC1);
+            playlistCancionDao.addCancionToPlaylist(1, idC2);
 
-        // ---------- 9. CARRITO ----------
-        carritoDAO carDAO = new carritoDAO();
-        carrito car = new carrito(1, 1, null); // id_usuario=1
-        carDAO.createCarrito(car);
-        carDAO.readCarrito(1);
-        car.setId_usuario(1);
-        carDAO.updateCarrito(car);
+            System.out.println("\n--- Creando Disco MP3 ---");
+            mp3Dao.createMP3(new discoMP3(1, "Disco MP3 X", new Date(), null));
+            discoCancionDao.addCancionToDisco(1, idC1);
 
-        // ---------- 10. CARRITO ITEM ----------
-        carritoItemDAO carItemDAO = new carritoItemDAO();
-        carritoItem item = new carritoItem(1, 1, "vinilo", 1, 2); // id_carrito=1, id_producto=1
-        carItemDAO.createItem(item);
-        carItemDAO.readItem(1);
-        item.setCantidad(3);
-        carItemDAO.updateItem(item);
+            System.out.println("\n--- Creando Vinilo ---");
+            viniloDao.createVinilo(new vinilo(1, "Vinilo X", "Artista X", 2024, 120000, 10, null));
+            viniloCancionDao.addCancionToVinilo(1, idC2);
 
-        // ---------- 11. PLAYLIST ----------
-        playListDAO plDAO = new playListDAO();
-        playList pl = new playList(1, 1, "Favoritos", true); // id_usuario=1
-        plDAO.createPlayList(pl);
-        plDAO.readPlayList(1);
-        pl.setNombre("Favoritos 2025");
-        plDAO.updatePlayList(pl);
+            System.out.println("\n===== PRUEBAS READ =====");
+            usuarioDao.readUsuario(1);
+            playlistDao.readPlayList(1);
+            mp3Dao.readMP3(1);
+            viniloDao.readVinilo(1);
 
-        // ---------- 12. PEDIDO ----------
-        pedidoDAO pedDAO = new pedidoDAO();
-        pedido ped = new pedido(1, 1, new Date(), "En proceso"); // id_usuario=1
-        pedDAO.createPedido(ped);
-        pedDAO.readPedido(1);
-        ped.setEstado("Enviado");
-        pedDAO.updatePedido(ped);
+            System.out.println("\n===== PRUEBAS UPDATE =====");
+            usuarioDao.updateUsuario(new usuario(1, "Usuario Modificado", "user@polisong.com", "newpass"));
+            viniloDao.updateVinilo(new vinilo(1, "Vinilo Modificado", "Artista X", 2024, 150000, 5, null));
 
-        // ---------- 13. PEDIDO DETALLE ----------
-        pedidoDetalleDAO pedDetDAO = new pedidoDetalleDAO();
-        pedidoDetalle det = new pedidoDetalle(1, 1, "vinilo", 1, 2, 150000.0); // id_pedido=1, id_producto=1
-        pedDetDAO.createPedDetalle(det);
-        pedDetDAO.readPedDetalle(1);
-        det.setCantidad(3);
-        pedDetDAO.updatePedDetalle(det);
+            System.out.println("\n===== PRUEBAS DELETE =====");
+            // playlistCancionDao.removeCancionFromPlaylist(1, idC1);
+            // usuarioDao.deleteUsuario(1);
+            // playlistDao.deletePlayList(1);
 
-        System.out.println("=== FIN DE PRUEBA DE LOS 13 DAOs ===");
-        */
-		// ================================================================
-		// =========== CREACIÓN DE DATOS BASE PARA RELACIONES ==============
-		// ================================================================
+        } catch (Exception e) {
+            System.out.println("Error en pruebas: " + e.getMessage());
+        }
 
-		System.out.println("\n=== CREANDO CANCIONES BASE PARA RELACIONES ===");
-
-		cancionDAO cancionDAO = new cancionDAO();
-
-		cancion c1 = new cancion(0, "Imagine", 3.2, 1.99, 5.0);
-		int idC1 = cancionDAO.createCancion(c1);
-
-		cancion c2 = new cancion(0, "Bohemian Rhapsody", 5.9, 2.99, 7.5);
-		int idC2 = cancionDAO.createCancion(c2);
-
-		// Si quieres confirmar o usarlos después
-		System.out.println("Canción 'Imagine' creada con ID: " + idC1);
-		System.out.println("Canción 'Bohemian Rhapsody' creada con ID: " + idC2);
-
-
-		// Verificar lectura
-		cancion cancionLeida = cancionDAO.readCancion(1);
-		if (cancionLeida != null) {
-		    System.out.println("Canción leída correctamente: " + cancionLeida.getNombre());
-		}
-
-		// ================================================================
-		// ======== RELACIONES N–M ENTRE ENTIDADES Y CANCIONES ============
-		// ================================================================
-
-		System.out.println("\n=== PRUEBA DE RELACIONES N–M ===");
-
-		// ---------- RELACIÓN DISCOMP3 ↔ CANCIÓN ----------
-		discomp3_cancionDAO d3cDAO = new discomp3_cancionDAO();
-
-		d3cDAO.addCancionToDisco(1, 1); // Disco MP3 1 contiene Canción 1
-		d3cDAO.addCancionToDisco(1, 2); // Disco MP3 1 contiene Canción 2
-
-		System.out.println("Canciones en el disco MP3 1: " + d3cDAO.getCancionesByDisco(1));
-		System.out.println("Discos MP3 donde aparece la canción 1: " + d3cDAO.getDiscosByCancion(1));
-
-
-		// ---------- RELACIÓN PLAYLIST ↔ CANCIÓN ----------
-		playlist_cancionDAO plcDAO = new playlist_cancionDAO();
-
-		plcDAO.addCancionToPlaylist(1, 1); // Playlist 1 contiene Canción 1
-		plcDAO.addCancionToPlaylist(1, 2); // Playlist 1 contiene Canción 2
-
-		System.out.println("Canciones en la playlist 1: " + plcDAO.getCancionesByPlaylist(1));
-		System.out.println("Playlists donde aparece la canción 1: " + plcDAO.getPlaylistsByCancion(1));
-
-
-		// ---------- RELACIÓN VINILO ↔ CANCIÓN ----------
-		vinilo_cancionDAO vcDAO = new vinilo_cancionDAO();
-
-		vcDAO.addCancionToVinilo(1, 1); // Vinilo 1 contiene Canción 1
-		vcDAO.addCancionToVinilo(1, 2); // Vinilo 1 contiene Canción 2
-
-		System.out.println("Canciones en el vinilo 1: " + vcDAO.getCancionesByVinilo(1));
-		System.out.println("Vinilos donde aparece la canción 1: " + vcDAO.getVinilosByCancion(1));
-
-		System.out.println("=== FIN DE PRUEBA DE RELACIONES N–M ===");
-
-	}
+        System.out.println("===== FIN PRUEBAS POLISONG =====");
+    }
 }

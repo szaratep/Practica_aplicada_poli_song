@@ -41,9 +41,7 @@ public class cancion {
      * Constructor vacío requerido para operaciones JDBC/DAO
      * cuando se construye el objeto y luego se llenan los atributos mediante setters.
      */
-    public cancion() {
-        // Constructor vacío
-    }
+   
 
     /**
      * Constructor que inicializa todos los atributos de la canción.
@@ -54,9 +52,8 @@ public class cancion {
      * @param precio Precio de venta
      * @param tamano_mb Tamaño en MB del archivo de la canción
      */
-    public cancion(int id_cancion, String nombre, double duracion, double precio, double tamano_mb) {
+    public cancion(String nombre, double duracion, double precio, double tamano_mb) {
         super();
-        this.id_cancion = id_cancion;
        	this.nombre = nombre;
         this.duracion = duracion;
         this.precio = precio;
