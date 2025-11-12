@@ -1,95 +1,100 @@
 package co.edu.poli.negocio;
 
-import co.edu.poli.datos.DBConnection;
-import java.sql.*;
+import co.edu.poli.datos.usuarioDAO;
+import co.edu.poli.datos.proveedorDAO;
+import co.edu.poli.model.usuario;
+import co.edu.poli.model.proveedor;
+import java.util.ArrayList;
+import java.util.List;
 
+/**
+ * Clase de negocio para la administración del sistema.
+ * Gestiona usuarios y proveedores a través de sus DAO,
+ * sin acceder directamente a la base de datos.
+ */
 public class adminManager {
 
-    private Connection conexion;
+    private usuarioDAO usuarioDao;
+    private proveedorDAO proveedorDao;
+
+    public adminManager() {
+        this.usuarioDao = new usuarioDAO();
+        this.proveedorDao = new proveedorDAO();
+    }
 
     /**
-     * Constructor: obtiene la conexión desde DBConnection (Singleton)
+     * Lista todos los usuarios registrados en el sistema.
+     * Usa los métodos del DAO para leer usuarios uno por uno,
+     * y se detiene cuando no encuentra más registros.
      */
-    public adminManager() {
-        this.conexion = DBConnection.getConnection();
-    }
-
     public void listarUsuarios() {
-    String sql = """
-        SELECT u.id_usuario, u.nombre, c.correo, u.contrasena
-        FROM Usuario u
-        INNER JOIN Correo c ON u.correo_id = c.id_correo
-    """;
+        System.out.println("\n---- LISTA DE USUARIOS ----");
 
-    try (Statement stmt = conexion.createStatement();
-         ResultSet rs = stmt.executeQuery(sql)) {
+        List<usuario> usuarios = new ArrayList<>();
 
-        System.out.println("---- LISTA DE USUARIOS ----");
-        while (rs.next()) {
-            int id = rs.getInt("id_usuario");
-            String nombre = rs.getString("nombre");
-            String correo = rs.getString("correo");
-            String contrasena = rs.getString("contrasena");
-
-            System.out.println(id + " | " + nombre + " | " + correo + " | " + contrasena);
+        int id = 1;
+        while (true) {
+            usuario u = usuarioDao.readUsuario(id);
+            if (u == null) break; // si no existe más, se detiene
+            usuarios.add(u);
+            id++;
         }
 
-    } catch (SQLException e) {
-        System.err.println("Error al listar usuarios: " + e.getMessage());
+        if (usuarios.isEmpty()) {
+            System.out.println("No existen usuarios registrados en el sistema.");
+            return;
+        }
+
+        for (usuario u : usuarios) {
+            System.out.println("ID: " + u.getId_usuario()
+                    + " | Nombre: " + u.getNombre()
+                    + " | Correo: " + u.getCorreo()
+                    + " | Contraseña: " + u.getContrasena());
+        }
     }
-}
+
+    /**
+     * Lista todos los proveedores registrados en el sistema.
+     * Recorre los IDs en orden hasta que ya no existan.
+     */
     public void listarProveedores() {
-    String sql = """
-        SELECT p.id_proveedor, p.nombre, c.correo, p.contrasena, p.calificaciones
-        FROM Proveedor p
-        INNER JOIN Correo c ON p.correo_id = c.id_correo
-    """;
+        System.out.println("\n---- LISTA DE PROVEEDORES ----");
 
-    try (Statement stmt = conexion.createStatement();
-         ResultSet rs = stmt.executeQuery(sql)) {
+        List<proveedor> proveedores = new ArrayList<>();
 
-        System.out.println("---- LISTA DE PROVEEDORES ----");
-        while (rs.next()) {
-            int id = rs.getInt("id_proveedor");
-            String nombre = rs.getString("nombre");
-            String correo = rs.getString("correo");
-            String contrasena = rs.getString("contrasena");
-            int calificaciones = rs.getInt("calificaciones");
-
-            System.out.println(id + " | " + nombre + " | " + correo + 
-                               " | " + contrasena + " | calificaciones: " + calificaciones);
+        int id = 1;
+        while (true) {
+            proveedor p = proveedorDao.readProveedor(id);
+            if (p == null) break;
+            proveedores.add(p);
+            id++;
         }
 
-    } catch (SQLException e) {
-        System.err.println("Error al listar proveedores: " + e.getMessage());
-    }
-}
+        if (proveedores.isEmpty()) {
+            System.out.println("No existen proveedores registrados en el sistema.");
+            return;
+        }
 
-
-   
-    public boolean eliminarUsuario(int idUsuario) {
-        String sql = "DELETE FROM Usuario WHERE id_usuario = ?";
-        try (PreparedStatement ps = conexion.prepareStatement(sql)) {
-            ps.setInt(1, idUsuario);
-            int filas = ps.executeUpdate();
-            return filas > 0;
-        } catch (SQLException e) {
-            System.err.println("Error al eliminar usuario: " + e.getMessage());
-            return false;
+        for (proveedor p : proveedores) {
+            System.out.println("ID: " + p.getId_proveedor()
+                    + " | Nombre: " + p.getNombre()
+                    + " | Correo: " + p.getCorreo()
+                    + " | Contraseña: " + p.getContrasena()
+                    + " | Calificaciones: " + p.getCalificaciones());
         }
     }
 
-    
-    public boolean eliminarProveedor(int idProveedor) {
-        String sql = "DELETE FROM Proveedor WHERE id_proveedor = ?";
-        try (PreparedStatement ps = conexion.prepareStatement(sql)) {
-            ps.setInt(1, idProveedor);
-            int filas = ps.executeUpdate();
-            return filas > 0;
-        } catch (SQLException e) {
-            System.err.println("Error al eliminar proveedor: " + e.getMessage());
-            return false;
-        }
+    /**
+     * Elimina un usuario (usa el método delete del DAO).
+     */
+    public void eliminarUsuario(int idUsuario) {
+        usuarioDao.deleteUsuario(idUsuario);
     }
 
+    /**
+     * Elimina un proveedor (usa el método delete del DAO).
+     */
+    public void eliminarProveedor(int idProveedor) {
+        proveedorDao.deleteProveedor(idProveedor);
+    }
 }

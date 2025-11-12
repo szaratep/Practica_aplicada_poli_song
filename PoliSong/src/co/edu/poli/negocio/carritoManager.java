@@ -1,57 +1,92 @@
 package co.edu.poli.negocio;
 
-import java.util.*;
+import co.edu.poli.datos.*;
+import co.edu.poli.model.*;
 
-
+/**
+ * Clase de lógica de negocio para la gestión de carritos.
+ * 
+ * Esta clase NO realiza consultas SQL.
+ * Toda la comunicación con la base de datos se hace a través
+ * de carritoDAO y carritoItemDAO.
+ */
 public class carritoManager {
 
+    private final carritoDAO carritoDao;
+    private final carritoItemDAO itemDao;
 
-    private List<String> carrito;
-
-   
+    /**
+     * Constructor que inicializa los DAOs necesarios.
+     */
     public carritoManager() {
-        carrito = new ArrayList<>();
+        this.carritoDao = new carritoDAO();
+        this.itemDao = new carritoItemDAO();
     }
 
-    
-    public void agregarProducto(String producto) {
-        if (producto == null || producto.isEmpty()) {
-            System.out.println("El nombre del producto no puede estar vacío.");
-            return;
-        }
-        carrito.add(producto);
-        System.out.println("Producto agregado al carrito: " + producto);
+    /**
+     * Crea un carrito nuevo en la base de datos.
+     */
+    public void crearCarrito(int idCarrito, int idUsuario) {
+        carrito c = new carrito(idCarrito, idUsuario, null);
+        carritoDao.createCarrito(c);
+        System.out.println("carritoManager -> crearCarrito: Carrito creado para el usuario con ID " + idUsuario);
     }
 
-    
-    public void eliminarProducto(String producto) {
-        if (carrito.remove(producto)) {
-            System.out.println("Producto eliminado: " + producto);
+    /**
+     * Agrega un producto al carrito.
+     */
+    public void agregarItem(int idItem, int idCarrito, String tipo, int idProducto, int cantidad) {
+        carritoItem item = new carritoItem(idItem, idCarrito, tipo, idProducto, cantidad);
+        itemDao.createItem(item);
+        System.out.println("carritoManager -> agregarItem: Producto agregado (" + tipo + " ID: " + idProducto + ")");
+    }
+
+    /**
+     * Lee un carrito de la base de datos.
+     */
+    public void verCarrito(int idCarrito) {
+        carrito c = carritoDao.readCarrito(idCarrito);
+        if (c != null) {
+            System.out.println("carritoManager -> verCarrito: Carrito encontrado (ID Usuario: " + c.getId_usuario() + ")");
         } else {
-            System.out.println("El producto no se encuentra en el carrito.");
+            System.out.println("carritoManager -> verCarrito: No se encontró el carrito con ID " + idCarrito);
         }
     }
 
-    
-    public void vaciarCarrito() {
-        carrito.clear();
-        System.out.println("🧹 Carrito vaciado correctamente.");
-    }
-
-    
-    public void verCarrito() {
-        System.out.println("CONTENIDO DEL CARRITO:");
-        if (carrito.isEmpty()) {
-            System.out.println(" (Carrito vacío)");
+    /**
+     * Lee un item específico del carrito.
+     */
+    public void verItem(int idItem) {
+        carritoItem item = itemDao.readItem(idItem);
+        if (item != null) {
+            System.out.println("carritoManager -> verItem: Item encontrado (tipo: " + item.getTipo_producto() + ")");
         } else {
-            for (int i = 0; i < carrito.size(); i++) {
-                System.out.println((i + 1) + ". " + carrito.get(i));
-            }
+            System.out.println("carritoManager -> verItem: No existe el item con ID " + idItem);
         }
     }
 
-    
-    public List<String> getCarrito() {
-        return carrito;
+    /**
+     * Actualiza un item existente del carrito.
+     */
+    public void actualizarItem(int idItem, int idCarrito, String tipo, int idProducto, int cantidad) {
+        carritoItem item = new carritoItem(idItem, idCarrito, tipo, idProducto, cantidad);
+        itemDao.updateItem(item);
+        System.out.println("carritoManager -> actualizarItem: Item actualizado (ID: " + idItem + ")");
+    }
+
+    /**
+     * Elimina un item del carrito.
+     */
+    public void eliminarItem(int idItem) {
+        itemDao.deleteItem(idItem);
+        System.out.println("carritoManager -> eliminarItem: Item eliminado (ID: " + idItem + ")");
+    }
+
+    /**
+     * Elimina un carrito completo de la base de datos.
+     */
+    public void eliminarCarrito(int idCarrito) {
+        carritoDao.deleteCarrito(idCarrito);
+        System.out.println("carritoManager -> eliminarCarrito: Carrito eliminado (ID: " + idCarrito + ")");
     }
 }
