@@ -1,7 +1,5 @@
 package co.edu.poli.view;
 
-import java.util.Date;
-import co.edu.poli.model.*;
 import co.edu.poli.negocio.*;
 
 public class Main {
@@ -37,3 +35,4 @@ public class Main {
         System.out.println("===== FIN PRUEBA CARRITO MANAGER =====");
     }
 }
+

@@ -122,5 +122,6 @@ public class pedidoManager {
 
         pedidoDao.deletePedido(idPedido);
         System.out.println("pedidoManager -> eliminarPedido: Pedido eliminado correctamente");
+    
     }
 }
