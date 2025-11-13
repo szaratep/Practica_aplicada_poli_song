@@ -1,168 +1,131 @@
 package co.edu.poli.negocio;
 
-import co.edu.poli.datos.DBConnection;
-import java.sql.*;
+import co.edu.poli.datos.*;
+import co.edu.poli.model.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
+/**
+ * Lógica de negocio para la gestión de proveedores.
+ * Esta clase usa los DAOs existentes (sin SQL directo salvo consultas específicas).
+ */
 public class proveedorManager {
 
-    public proveedorManager() {}
+    private final proveedorDAO proveedorDao;
+    private final pedidoDAO pedidoDao;
+    private final pedidoDetalleDAO pedidoDetalleDao;
 
-   
-    public void registrarProveedor(String nombre, int correo_id, String contrasena, int calificaciones) {
-        String sql = """
-            INSERT INTO proveedor (nombre, correo_id, contrasena, calificaciones)
-            VALUES (?, ?, ?, ?);
-        """;
+    /**
+     * Constructor: inicializa los DAOs.
+     */
+    public proveedorManager() {
+        this.proveedorDao = new proveedorDAO();
+        this.pedidoDao = new pedidoDAO();
+        this.pedidoDetalleDao = new pedidoDetalleDAO();
+    }
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+    /**
+     * Registra un nuevo proveedor.
+     * El correo debe existir previamente en la tabla correo.
+     */
+    public void registrarProveedor(int idProveedor, String nombre, String correo, String contrasena, int calificaciones) {
+        proveedor p = new proveedor(idProveedor, nombre, correo, contrasena, calificaciones);
+        proveedorDao.createProveedor(p);
+        System.out.println("proveedorManager -> registrarProveedor: Proveedor registrado correctamente.");
+    }
 
-            ps.setString(1, nombre);
-            ps.setInt(2, correo_id);
-            ps.setString(3, contrasena);
-            ps.setInt(4, calificaciones);
+    /**
+     * Actualiza un proveedor existente.
+     */
+    public void actualizarProveedor(int idProveedor, String nombre, String correo, String contrasena, int calificaciones) {
+        proveedor p = new proveedor(idProveedor, nombre, correo, contrasena, calificaciones);
+        proveedorDao.updateProveedor(p);
+        System.out.println("proveedorManager -> actualizarProveedor: Proveedor actualizado correctamente.");
+    }
 
-            ps.executeUpdate();
-            System.out.println("Proveedor registrado correctamente.");
+    /**
+     * Elimina un proveedor por su ID.
+     */
+    public void eliminarProveedor(int idProveedor) {
+        proveedorDao.deleteProveedor(idProveedor);
+        System.out.println("proveedorManager -> eliminarProveedor: Proveedor eliminado correctamente.");
+    }
 
-        } catch (SQLException e) {
-            System.err.println("Error al registrar proveedor: " + e.getMessage());
+    /**
+     * Lee un proveedor por su ID.
+     */
+    public void verProveedor(int idProveedor) {
+        proveedor p = proveedorDao.readProveedor(idProveedor);
+        if (p != null) {
+            System.out.println("proveedorManager -> verProveedor: Proveedor encontrado.");
+            System.out.println("ID: " + p.getId_proveedor() + " | Nombre: " + p.getNombre() +
+                    " | Correo: " + p.getCorreo() + " | Calificación: " + p.getCalificaciones());
+        } else {
+            System.out.println("proveedorManager -> verProveedor: No existe el proveedor con ID " + idProveedor);
         }
     }
 
-    
-    public void actualizarProveedor(int id_proveedor, String nuevoNombre, String nuevaContrasena, int nuevaCalificacion) {
+    /**
+     * Lista los pedidos con estado "Pendiente".
+     * (Esta consulta es especial, así que se mantiene SQL directa controlada aquí).
+     */
+    public void verPedidosPendientes() {
+        System.out.println("---- LISTA DE PEDIDOS PENDIENTES ----");
+
         String sql = """
-            UPDATE proveedor
-            SET nombre = ?, contrasena = ?, calificaciones = ?
-            WHERE id_proveedor = ?;
+            SELECT pd.id_pedido, pd.id_detalle, pd.tipo_producto, pd.id_producto, pd.cantidad, pd.precio_unitario
+            FROM pedido_detalle pd
+            INNER JOIN pedido p ON pd.id_pedido = p.id_pedido
+            WHERE p.estado = 'Pendiente'
         """;
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
-            ps.setString(1, nuevoNombre);
-            ps.setString(2, nuevaContrasena);
-            ps.setInt(3, nuevaCalificacion);
-            ps.setInt(4, id_proveedor);
-
-            int filas = ps.executeUpdate();
-            if (filas > 0)
-                System.out.println("Proveedor actualizado correctamente.");
-            else
-                System.out.println("No se encontró el proveedor con ID: " + id_proveedor);
-
-        } catch (SQLException e) {
-            System.err.println("Error al actualizar proveedor: " + e.getMessage());
-        }
-    }
-
-    
-    public void eliminarProveedor(int id_proveedor) {
-        String sql = "DELETE FROM proveedor WHERE id_proveedor = ?;";
-
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setInt(1, id_proveedor);
-            int filas = ps.executeUpdate();
-
-            if (filas > 0)
-                System.out.println("Proveedor eliminado correctamente.");
-            else
-                System.out.println("No se encontró el proveedor con ID: " + id_proveedor);
-
-        } catch (SQLException e) {
-            System.err.println("Error al eliminar proveedor: " + e.getMessage());
-        }
-    }
-
-    
-    public void listarProveedores() {
-        String sql = """
-            SELECT p.id_proveedor, p.nombre, c.correo, p.calificaciones
-            FROM proveedor p
-            JOIN correo c ON p.correo_id = c.id_correo;
-        """;
-
-        try (Connection con = DBConnection.getConnection();
-             Statement st = con.createStatement();
-             ResultSet rs = st.executeQuery(sql)) {
-
-            System.out.println("---- LISTA DE PROVEEDORES ----");
+            boolean hayResultados = false;
             while (rs.next()) {
-                System.out.println("ID: " + rs.getInt("id_proveedor") +
-                                   " | Nombre: " + rs.getString("nombre") +
-                                   " | Correo: " + rs.getString("correo") +
-                                   " | Calificación: " + rs.getInt("calificaciones"));
+                hayResultados = true;
+                System.out.printf(
+                        "Pedido ID: %d | Detalle ID: %d | Tipo: %s | Producto ID: %d | Cantidad: %d | Precio: %.2f%n",
+                        rs.getInt("id_pedido"),
+                        rs.getInt("id_detalle"),
+                        rs.getString("tipo_producto"),
+                        rs.getInt("id_producto"),
+                        rs.getInt("cantidad"),
+                        rs.getDouble("precio_unitario")
+                );
+            }
+
+            if (!hayResultados) {
+                System.out.println("No hay pedidos pendientes en este momento.");
             }
 
         } catch (SQLException e) {
-            System.err.println("Error al listar proveedores: " + e.getMessage());
+            System.err.println("Error al listar pedidos pendientes: " + e.getMessage());
         }
     }
 
-    
-    public void verPedidosPendientes() {
-    System.out.println("\n? CONSULTANDO PEDIDOS PENDIENTES...");
-    String sql = 
-        "SELECT pd.id_pedido, pd.id_detalle, pd.tipo_producto, pd.id_producto, pd.cantidad, pd.precio_unitario " +
-        "FROM pedido_detalle pd " +
-        "INNER JOIN pedido p ON pd.id_pedido = p.id_pedido " +
-        "WHERE p.estado = 'Pendiente'";
+    /**
+     * Actualiza el inventario de un vinilo.
+     * Usa SQL directa porque no hay viniloDAO implementado.
+     */
+    public void gestionarInventarioVinilo(int idVinilo, int nuevoInventario) {
+        String sql = "UPDATE vinilo SET inventario = ? WHERE id_vinilo = ?";
 
-    try (Connection conn = DBConnection.getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql);
-         ResultSet rs = ps.executeQuery()) {
-
-        System.out.println("Conexión a BD establecida correctamente");
-
-        boolean hayResultados = false;
-        System.out.println("---- LISTA DE PEDIDOS PENDIENTES ----");
-
-        while (rs.next()) {
-            hayResultados = true;
-
-            int idPedido = rs.getInt("id_pedido");
-            int idDetalle = rs.getInt("id_detalle");
-            String tipoProducto = rs.getString("tipo_producto");
-            int idProducto = rs.getInt("id_producto");
-            int cantidad = rs.getInt("cantidad");
-            double precioUnitario = rs.getDouble("precio_unitario");
-
-            System.out.printf("Pedido ID: %d | Detalle ID: %d | Tipo: %s | Producto ID: %d | Cantidad: %d | Precio: %.2f\n",
-                    idPedido, idDetalle, tipoProducto, idProducto, cantidad, precioUnitario);
-        }
-
-        if (!hayResultados) {
-            System.out.println("No hay pedidos pendientes en este momento.");
-        }
-
-    } catch (SQLException e) {
-        System.out.println("Error al consultar pedidos pendientes: " + e.getMessage());
-    }
-}
-
-
-    
-    public void gestionarInventarioVinilo(int id_vinilo, int nuevoInventario) {
-        String sql = """
-            UPDATE vinilo
-            SET inventario = ?
-            WHERE id_vinilo = ?;
-        """;
-
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, nuevoInventario);
-            ps.setInt(2, id_vinilo);
-
+            ps.setInt(2, idVinilo);
             int filas = ps.executeUpdate();
+
             if (filas > 0)
-                System.out.println("Inventario actualizado correctamente para vinilo ID: " + id_vinilo);
+                System.out.println("Inventario actualizado correctamente para vinilo ID: " + idVinilo);
             else
-                System.out.println("No se encontró el vinilo con ID: " + id_vinilo);
+                System.out.println("No se encontró el vinilo con ID: " + idVinilo);
 
         } catch (SQLException e) {
             System.err.println("Error al actualizar inventario de vinilo: " + e.getMessage());

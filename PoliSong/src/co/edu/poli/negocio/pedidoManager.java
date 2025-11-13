@@ -5,7 +5,8 @@ import co.edu.poli.model.*;
 
 /**
  * Lógica de negocio para la gestión de pedidos y sus detalles.
- * Esta clase utiliza los DAOs para comunicarse con la base de datos.
+ * 
+ * Esta clase usa exclusivamente los DAOs para comunicarse con la base de datos.
  */
 public class pedidoManager {
 
@@ -30,98 +31,91 @@ public class pedidoManager {
     }
 
     /**
-     * Muestra un pedido y sus detalles por ID de usuario.
+     * Agrega un detalle al pedido.
      */
-    public void verPedidosUsuario(int idUsuario) {
-        System.out.println("pedidoManager -> verPedidosUsuario: Buscando pedidos del usuario ID " + idUsuario);
-
-        // No tienes un método que lea todos los pedidos por usuario en pedidoDAO,
-        // así que se haría leyendo manualmente desde SQL o agregando uno.
-        // Por ahora, suponemos que se consulta 1 pedido a la vez (por ID).
-        System.out.println("⚠️ Este método requiere un readAllPedidosByUsuario() en pedidoDAO para listar todos.");
+    public void agregarDetalle(int idDetalle, int idPedido, String tipoProducto, int idProducto, int cantidad, double precioUnitario) {
+        pedidoDetalle detalle = new pedidoDetalle(idDetalle, idPedido, tipoProducto, idProducto, cantidad, precioUnitario);
+        detalleDao.createPedDetalle(detalle);
+        System.out.println("pedidoManager -> agregarDetalle: Detalle agregado al pedido ID " + idPedido);
     }
 
     /**
-     * Muestra todos los detalles de un pedido específico.
+     * Verifica un pedido existente en la base de datos.
      */
-    public void verDetallesPedido(int idPedido) {
-        pedido ped = pedidoDao.readPedido(idPedido);
-
-        if (ped == null) {
-            System.out.println("pedidoManager -> verDetallesPedido: No se encontró el pedido con ID " + idPedido);
-            return;
-        }
-
-        System.out.println("---- PEDIDO ID " + ped.getId_pedido() + " ----");
-        System.out.println("Usuario ID: " + ped.getId_usuario());
-        System.out.println("Fecha: " + ped.getFecha());
-        System.out.println("Estado: " + ped.getEstado());
-        System.out.println("Detalles:");
-
-        // Si tienes el método readDetallesByPedido(), lo usamos:
-        try (java.sql.Connection conn = DBConnection.getConnection();
-             java.sql.PreparedStatement stmt = conn.prepareStatement(
-                     "SELECT * FROM pedido_detalle WHERE id_pedido = ?")) {
-
-            stmt.setInt(1, idPedido);
-            java.sql.ResultSet rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                System.out.println(" • Detalle ID: " + rs.getInt("id_detalle")
-                        + " | Tipo: " + rs.getString("tipo_Producto")
-                        + " | Producto ID: " + rs.getInt("id_producto")
-                        + " | Cantidad: " + rs.getInt("cantidad")
-                        + " | Precio: $" + rs.getDouble("precio_unitario"));
-            }
-
-        } catch (Exception e) {
-            System.out.println("pedidoManager -> verDetallesPedido: Error al leer detalles");
-            System.out.println("Detalles: " + e.getMessage());
+    public void verPedido(int idPedido) {
+        pedido p = pedidoDao.readPedido(idPedido);
+        if (p != null) {
+            System.out.println("pedidoManager -> verPedido: Pedido encontrado");
+            System.out.println("ID Pedido: " + p.getId_pedido() +
+                    " | ID Usuario: " + p.getId_usuario() +
+                    " | Fecha: " + p.getFecha() +
+                    " | Estado: " + p.getEstado());
+        } else {
+            System.out.println("pedidoManager -> verPedido: Pedido no encontrado (ID: " + idPedido + ")");
         }
     }
 
     /**
-     * Confirma el envío del pedido (actualiza estado a 'Enviado').
+     * Verifica un detalle de pedido existente en la base de datos.
      */
-    public void confirmarEnvioPedido(int idPedido) {
+    public void verDetalle(int idDetalle) {
+        pedidoDetalle det = detalleDao.readPedDetalle(idDetalle);
+        if (det != null) {
+            System.out.println("pedidoManager -> verDetalle: Detalle encontrado");
+            System.out.println("ID Detalle: " + det.getId_detalle() +
+                    " | Pedido ID: " + det.getId_pedido() +
+                    " | Tipo: " + det.getTipo_Producto() +
+                    " | Producto ID: " + det.getId_producto() +
+                    " | Cantidad: " + det.getCantidad() +
+                    " | Precio: $" + det.getPrecio_unitario());
+        } else {
+            System.out.println("pedidoManager -> verDetalle: Detalle no encontrado (ID: " + idDetalle + ")");
+        }
+    }
+
+    /**
+     * Actualiza el estado de un pedido.
+     */
+    public void actualizarEstadoPedido(int idPedido, String nuevoEstado) {
         pedido p = pedidoDao.readPedido(idPedido);
         if (p == null) {
-            System.out.println("pedidoManager -> confirmarEnvioPedido: No se encontró el pedido con ID " + idPedido);
+            System.out.println("pedidoManager -> actualizarEstadoPedido: Pedido no encontrado (ID: " + idPedido + ")");
             return;
         }
 
-        p.setEstado("Enviado");
+        p.setEstado(nuevoEstado);
         pedidoDao.updatePedido(p);
-        System.out.println("pedidoManager -> confirmarEnvioPedido: Pedido ID " + idPedido + " marcado como 'Enviado'");
+        System.out.println("pedidoManager -> actualizarEstadoPedido: Pedido actualizado a estado '" + nuevoEstado + "'");
     }
 
     /**
-     * Confirma la recepción del pedido (actualiza estado a 'Recibido').
+     * Actualiza un detalle específico de pedido.
      */
-    public void confirmarRecepcionPedido(int idPedido) {
-        pedido p = pedidoDao.readPedido(idPedido);
-        if (p == null) {
-            System.out.println("pedidoManager -> confirmarRecepcionPedido: No se encontró el pedido con ID " + idPedido);
-            return;
-        }
-
-        p.setEstado("Recibido");
-        pedidoDao.updatePedido(p);
-        System.out.println("pedidoManager -> confirmarRecepcionPedido: Pedido ID " + idPedido + " marcado como 'Recibido'");
+    public void actualizarDetalle(int idDetalle, int idPedido, String tipoProducto, int idProducto, int cantidad, double precioUnitario) {
+        pedidoDetalle det = new pedidoDetalle(idDetalle, idPedido, tipoProducto, idProducto, cantidad, precioUnitario);
+        detalleDao.updatePedDetalle(det);
+        System.out.println("pedidoManager -> actualizarDetalle: Detalle actualizado (ID: " + idDetalle + ")");
     }
 
     /**
-     * Elimina un pedido existente.
+     * Elimina un detalle de pedido.
+     */
+    public void eliminarDetalle(int idDetalle) {
+        detalleDao.deletePedDetalle(idDetalle);
+        System.out.println("pedidoManager -> eliminarDetalle: Detalle eliminado (ID: " + idDetalle + ")");
+    }
+
+    /**
+     * Elimina un pedido completo.
      */
     public void eliminarPedido(int idPedido) {
         pedido p = pedidoDao.readPedido(idPedido);
         if (p == null) {
-            System.out.println("pedidoManager -> eliminarPedido: No existe el pedido con ID " + idPedido);
+            System.out.println("pedidoManager -> eliminarPedido: Pedido no encontrado (ID: " + idPedido + ")");
             return;
         }
 
         pedidoDao.deletePedido(idPedido);
-        System.out.println("pedidoManager -> eliminarPedido: Pedido eliminado correctamente");
-    
+        System.out.println("pedidoManager -> eliminarPedido: Pedido eliminado (ID: " + idPedido + ")");
     }
 }

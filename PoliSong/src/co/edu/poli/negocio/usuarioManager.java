@@ -1,87 +1,105 @@
 package co.edu.poli.negocio;
 
-import co.edu.poli.datos.DBConnection;
-import java.sql.*;;
+import co.edu.poli.datos.*;
+import co.edu.poli.model.*;
 
+/**
+ * Clase de negocio que gestiona los usuarios del sistema.
+ * Se apoya en los DAO {@link usuarioDAO} y {@link correoDAO}.
+ */
 public class usuarioManager {
 
-   
+    private final usuarioDAO usuarioDao;
+    private final correoDAO correoDao;
 
+    /** Constructor por defecto */
     public usuarioManager() {
+        this.usuarioDao = new usuarioDAO();
+        this.correoDao = new correoDAO();
     }
 
-    
+    /**
+     * Registra un nuevo usuario.
+     * Si el correo no existe en la base de datos, se crea automáticamente.
+     *
+     * @param idUsuario ID del usuario
+     * @param nombre Nombre del usuario
+     * @param correo Dirección de correo
+     * @param contrasena Contraseña del usuario
+     */
+    public void registrarUsuario(int idUsuario, String nombre, String correo, String contrasena) {
+        System.out.println("usuarioManager -> registrarUsuario: Intentando registrar usuario...");
 
-    public void registrarUsuario(String nombre, int correoId, String contrasena) {
-        String sql = "INSERT INTO usuario (nombre, correo_id, contrasena) VALUES (?, ?, ?)";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        // Verificar si el correo existe, si no, lo crea
+        correo correoExistente = correoDao.readCorreo(correo);
+        if (correoExistente == null) {
+            System.out.println("usuarioManager -> registrarUsuario: Correo no existe. Creando nuevo correo...");
+            correo nuevoCorreo = new correo(correo);
+            correoDao.createCorreo(nuevoCorreo);
+        }
 
-            stmt.setString(1, nombre);
-            stmt.setInt(2, correoId);
-            stmt.setString(3, contrasena);
+        usuario u = new usuario(idUsuario, nombre, correo, contrasena);
+        usuarioDao.createUsuario(u);
+        System.out.println("usuarioManager -> registrarUsuario: Usuario registrado correctamente.");
+    }
 
-            int rows = stmt.executeUpdate();
-            if (rows > 0) {
-                System.out.println("Usuario registrado correctamente.");
-            } else {
-                System.out.println("No se pudo registrar el usuario.");
-            }
+    /**
+     * Consulta la información de un usuario por su ID.
+     */
+    public void verUsuario(int idUsuario) {
+        System.out.println("usuarioManager -> verUsuario: Consultando usuario ID " + idUsuario);
+        usuario u = usuarioDao.readUsuario(idUsuario);
 
-        } catch (SQLException e) {
-            System.out.println("Error al registrar usuario: " + e.getMessage());
+        if (u != null) {
+            System.out.println("ID Usuario: " + u.getId_usuario() +
+                    " | Nombre: " + u.getNombre() +
+                    " | Correo: " + u.getCorreo() +
+                    " | Contraseña: " + u.getContrasena());
+        } else {
+            System.out.println("usuarioManager -> verUsuario: No existe el usuario con ID " + idUsuario);
         }
     }
 
-   
+    /**
+     * Actualiza la información de un usuario existente.
+     * Si el nuevo correo no existe, se crea automáticamente.
+     */
+    public void actualizarUsuario(int idUsuario, String nuevoNombre, String nuevoCorreo, String nuevaContrasena) {
+        System.out.println("usuarioManager -> actualizarUsuario: Intentando actualizar usuario ID " + idUsuario);
 
-    public void actualizarUsuario(int idUsuario, String nuevoNombre, String nuevaContrasena) {
-        String sql = "UPDATE usuario SET nombre = ?, contrasena = ? WHERE id_usuario = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, nuevoNombre);
-            stmt.setString(2, nuevaContrasena);
-            stmt.setInt(3, idUsuario);
-
-            int rows = stmt.executeUpdate();
-            if (rows > 0) {
-                System.out.println("Usuario actualizado correctamente.");
-            } else {
-                System.out.println("No se encontró el usuario con ID " + idUsuario);
-            }
-
-        } catch (SQLException e) {
-            System.out.println("Error al actualizar usuario: " + e.getMessage());
+        // Verificar si el nuevo correo existe, si no, se crea
+        correo correoExistente = correoDao.readCorreo(nuevoCorreo);
+        if (correoExistente == null) {
+            System.out.println("usuarioManager -> actualizarUsuario: Correo no existe. Creando nuevo correo...");
+            correo nuevo = new correo(nuevoCorreo);
+            correoDao.createCorreo(nuevo);
         }
+
+        usuario u = new usuario(idUsuario, nuevoNombre, nuevoCorreo, nuevaContrasena);
+        usuarioDao.updateUsuario(u);
+        System.out.println("usuarioManager -> actualizarUsuario: Usuario actualizado correctamente.");
     }
 
-    
+    /**
+     * Elimina un usuario por su ID.
+     */
     public void eliminarUsuario(int idUsuario) {
-        String sql = "DELETE FROM usuario WHERE id_usuario = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, idUsuario);
-
-            int rows = stmt.executeUpdate();
-            if (rows > 0) {
-                System.out.println("Usuario eliminado correctamente.");
-            } else {
-                System.out.println("No se encontró el usuario con ID " + idUsuario);
-            }
-
-        } catch (SQLException e) {
-            System.out.println("Error al eliminar usuario: " + e.getMessage());
-        }
+        System.out.println("usuarioManager -> eliminarUsuario: Eliminando usuario ID " + idUsuario);
+        usuarioDao.deleteUsuario(idUsuario);
+        System.out.println("usuarioManager -> eliminarUsuario: Usuario eliminado correctamente.");
     }
 
-    
+    /**
+     * Lista todos los usuarios con sus correos asociados.
+     * (Consulta realizada directamente con SQL JOIN dentro de usuarioDAO)
+     */
     public void listarUsuarios() {
-        String sql = "SELECT u.id_usuario, u.nombre, c.correo FROM usuario u INNER JOIN correo c ON u.correo_id = c.id_correo";
-        try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        System.out.println("usuarioManager -> listarUsuarios: Mostrando lista de usuarios...");
+        try (var conn = DBConnection.getConnection();
+             var stmt = conn.createStatement();
+             var rs = stmt.executeQuery(
+                     "SELECT u.id_usuario, u.nombre, c.correo " +
+                     "FROM usuario u INNER JOIN correo c ON u.correo_id = c.id_correo")) {
 
             System.out.println("---- LISTA DE USUARIOS ----");
             while (rs.next()) {
@@ -90,9 +108,9 @@ public class usuarioManager {
                 String correo = rs.getString("correo");
                 System.out.println("ID: " + id + " | Nombre: " + nombre + " | Correo: " + correo);
             }
-
-        } catch (SQLException e) {
-            System.out.println("Error al listar usuarios: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("usuarioManager -> listarUsuarios: Error al listar usuarios");
+            System.out.println("Detalles: " + e.getMessage());
         }
     }
 }

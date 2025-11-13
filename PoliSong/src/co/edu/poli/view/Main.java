@@ -1,39 +1,36 @@
 package co.edu.poli.view;
 
+import co.edu.poli.datos.*;
+import co.edu.poli.model.*;
 import co.edu.poli.negocio.*;
 
 public class Main {
     public static void main(String[] args) {
-    	carritoManager manager = new carritoManager();
+        System.out.println("===== PRUEBA USUARIO MANAGER =====");
 
-    	int idCarrito = 1;
-    	int idUsuario = 1;
+        usuarioManager manager = new usuarioManager();
 
-    	System.out.println("===== PRUEBA CARRITO MANAGER =====");
+        // 1️⃣ Registrar un nuevo usuario (crea el correo si no existe)
+        System.out.println("\n--- REGISTRAR USUARIO ---");
+        manager.registrarUsuario(10, "Juan Pérez", "juanperez@example.com", "1234");
 
-    	// Crear carrito
-    	manager.crearCarrito(idCarrito, idUsuario);
+        // 2️⃣ Consultar usuario por ID
+        System.out.println("\n--- VER USUARIO ---");
+        manager.verUsuario(10);
 
-    	// Agregar productos válidos según tu BD
-    	manager.agregarCancion(1, idCarrito, 5, 2); // Canción con ID 5
-    	manager.agregarVinilo(2, idCarrito, 1, 1);  // Vinilo con ID 1
-    	manager.agregarMP3(3, idCarrito, 1, 1);     // MP3 con ID 1
+        // 3️⃣ Actualizar datos del usuario (crea nuevo correo si no existe)
+        System.out.println("\n--- ACTUALIZAR USUARIO ---");
+        manager.actualizarUsuario(10, "Juan Pérez Actualizado", "juanpereznuevo@example.com", "abcd");
 
-    	// Ver carrito e ítems
-    	manager.verCarrito(idCarrito);
-    	manager.verItem(1);
-    	manager.verItem(2);
-    	manager.verItem(3);
+        // 4️⃣ Listar todos los usuarios
+        System.out.println("\n--- LISTAR USUARIOS ---");
+        manager.listarUsuarios();
 
-    	// Actualizar item (ejemplo)
-    	manager.actualizarItem(1, idCarrito, "cancion", 5, null, null, 3);
+        // 5️⃣ Eliminar usuario
+        System.out.println("\n--- ELIMINAR USUARIO ---");
+        manager.eliminarUsuario(10);
 
-    	// Eliminar item y carrito
-    	manager.eliminarItem(2);
-    	manager.eliminarCarrito(idCarrito);
-
-    	System.out.println("===== FIN PRUEBA CARRITO MANAGER =====");
-
+        System.out.println("\n===== FIN PRUEBA USUARIO MANAGER =====");
     }
 }
 
