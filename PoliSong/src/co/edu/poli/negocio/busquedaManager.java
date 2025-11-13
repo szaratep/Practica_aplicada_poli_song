@@ -3,8 +3,6 @@ package co.edu.poli.negocio;
 import co.edu.poli.datos.*;
 import co.edu.poli.model.*;
 
-import java.util.*;
-
 /**
  * Clase que gestiona las búsquedas globales del sistema PoliSongStock.
  * Permite listar o buscar usuarios, proveedores, canciones, vinilos

@@ -1,78 +1,66 @@
 package co.edu.poli.negocio;
 
-import co.edu.poli.model.vinilo;
-import java.util.*;
+import co.edu.poli.datos.*;
+import co.edu.poli.model.*;
 
-
+/**
+ * Clase de lógica de negocio para la gestión del catálogo de vinilos.
+ * 
+ * Esta clase NO realiza consultas SQL directamente.
+ * Todas las operaciones con la base de datos se manejan
+ * a través de viniloDAO.
+ */
 public class catalogoManager {
 
-    private List<vinilo> catalogo;
+    private final viniloDAO viniloDao;
 
-
+    /**
+     * Constructor que inicializa el DAO necesario.
+     */
     public catalogoManager() {
-        
-        catalogo = new ArrayList<>();
+        this.viniloDao = new viniloDAO();
     }
 
-
-    public void agregarViniloCatalogo(vinilo nuevoVinilo) {
-        if (nuevoVinilo == null) {
-            System.out.println("No se puede agregar un vinilo nulo.");
-            return;
-        }
-
-        for (vinilo v : catalogo) {
-            if (v.getId_vinilo() == nuevoVinilo.getId_vinilo()) {
-                System.out.println("Ya existe un vinilo con el ID " + nuevoVinilo.getId_vinilo());
-                return;
-            }
-        }
-
-        catalogo.add(nuevoVinilo);
-        System.out.println("Vinilo agregado correctamente: " + nuevoVinilo.getNombre());
+    /**
+     * Agrega un vinilo nuevo al catálogo.
+     */
+    public void agregarViniloCatalogo(int idVinilo, String nombre, String artista, int anio, double precio, int inventario) {
+        vinilo v = new vinilo(idVinilo, nombre, artista, anio, precio, inventario, null);
+        viniloDao.createVinilo(v);
+        System.out.println("catalogoManager -> agregarViniloCatalogo: Vinilo agregado al catálogo (" + nombre + ")");
     }
 
-    
+    /**
+     * Elimina un vinilo existente del catálogo.
+     */
     public void eliminarViniloCatalogo(int idVinilo) {
-        Iterator<vinilo> iterator = catalogo.iterator();
-        boolean eliminado = false;
-
-        while (iterator.hasNext()) {
-            vinilo v = iterator.next();
-            if (v.getId_vinilo() == idVinilo) {
-                iterator.remove();
-                eliminado = true;
-                System.out.println("Vinilo eliminado: " + v.getNombre());
-                break;
-            }
-        }
-
-        if (!eliminado) {
-            System.out.println("No se encontró ningún vinilo con el ID " + idVinilo);
-        }
+        viniloDao.deleteVinilo(idVinilo);
+        System.out.println("catalogoManager -> eliminarViniloCatalogo: Vinilo eliminado (ID: " + idVinilo + ")");
     }
 
-   
-    public void listarCatalogoProveedor() {
-        if (catalogo.isEmpty()) {
-            System.out.println("El catálogo está vacío.");
-            return;
-        }
-
-        System.out.println("\nCatálogo de Vinilos:");
-        for (vinilo v : catalogo) {
-            System.out.println("-----------------------------------");
-            System.out.println("ID: " + v.getId_vinilo());
-            System.out.println("Nombre: " + v.getNombre());
-            System.out.println("Artista: " + v.getArtista());
-            System.out.println("Año: " + v.getAnio());
-            System.out.println("Precio: $" + v.getPrecio());
-            System.out.println("Inventario: " + v.getInventario());
-        }
-        System.out.println("-----------------------------------\n");
+    /**
+     * Actualiza la información de un vinilo existente.
+     */
+    public void actualizarViniloCatalogo(int idVinilo, String nombre, String artista, int anio, double precio, int inventario) {
+        vinilo v = new vinilo(idVinilo, nombre, artista, anio, precio, inventario, null);
+        viniloDao.updateVinilo(v);
+        System.out.println("catalogoManager -> actualizarViniloCatalogo: Vinilo actualizado (ID: " + idVinilo + ")");
     }
 
-    public List<vinilo> getCatalogo() {
-        return catalogo;
+    /**
+     * Lista todos los vinilos del catálogo.
+     */
+
+    /**
+     * Consulta un vinilo específico por ID.
+     */
+    public void verVinilo(int idVinilo) {
+        vinilo v = viniloDao.readVinilo(idVinilo);
+        if (v != null) {
+            System.out.printf("catalogoManager -> verVinilo: ID: %d | Nombre: %s | Artista: %s | Año: %d | Precio: %.2f | Stock: %d\n",
+                    v.getId_vinilo(), v.getNombre(), v.getArtista(), v.getAnio(), v.getPrecio(), v.getInventario());
+        } else {
+            System.out.println("catalogoManager -> verVinilo: No se encontró el vinilo con ID " + idVinilo);
+        }
     }
 }
