@@ -6,8 +6,8 @@ import co.edu.poli.model.*;
 /**
  * Clase de lógica de negocio para la gestión de carritos.
  * 
- * Esta clase NO realiza consultas SQL.
- * Toda la comunicación con la base de datos se hace a través
+ * Esta clase NO ejecuta SQL directamente. 
+ * Toda la comunicación con la base de datos se hace a través 
  * de carritoDAO y carritoItemDAO.
  */
 public class carritoManager {
@@ -24,7 +24,7 @@ public class carritoManager {
     }
 
     /**
-     * Crea un carrito nuevo en la base de datos.
+     * Crea un nuevo carrito asociado a un usuario.
      */
     public void crearCarrito(int idCarrito, int idUsuario) {
         carrito c = new carrito(idCarrito, idUsuario, null);
@@ -33,16 +33,34 @@ public class carritoManager {
     }
 
     /**
-     * Agrega un producto al carrito.
+     * Agrega una canción al carrito.
      */
-    public void agregarItem(int idItem, int idCarrito, String tipo, int idProducto, int cantidad) {
-        carritoItem item = new carritoItem(idItem, idCarrito, tipo, idProducto, cantidad);
+    public void agregarCancion(int idItem, int idCarrito, int idCancion, int cantidad) {
+        carritoItem item = new carritoItem(idItem, idCarrito, "cancion", idCancion, null, null, cantidad);
         itemDao.createItem(item);
-        System.out.println("carritoManager -> agregarItem: Producto agregado (" + tipo + " ID: " + idProducto + ")");
+        System.out.println("carritoManager -> agregarCancion: Canción agregada (ID: " + idCancion + ")");
     }
 
     /**
-     * Lee un carrito de la base de datos.
+     * Agrega un vinilo al carrito.
+     */
+    public void agregarVinilo(int idItem, int idCarrito, int idVinilo, int cantidad) {
+        carritoItem item = new carritoItem(idItem, idCarrito, "vinilo", null, idVinilo, null, cantidad);
+        itemDao.createItem(item);
+        System.out.println("carritoManager -> agregarVinilo: Vinilo agregado (ID: " + idVinilo + ")");
+    }
+
+    /**
+     * Agrega un disco MP3 al carrito.
+     */
+    public void agregarMP3(int idItem, int idCarrito, int idMP3, int cantidad) {
+        carritoItem item = new carritoItem(idItem, idCarrito, "mp3", null, null, idMP3, cantidad);
+        itemDao.createItem(item);
+        System.out.println("carritoManager -> agregarMP3: Disco MP3 agregado (ID: " + idMP3 + ")");
+    }
+
+    /**
+     * Ver el carrito de un usuario.
      */
     public void verCarrito(int idCarrito) {
         carrito c = carritoDao.readCarrito(idCarrito);
@@ -54,7 +72,7 @@ public class carritoManager {
     }
 
     /**
-     * Lee un item específico del carrito.
+     * Ver un ítem específico.
      */
     public void verItem(int idItem) {
         carritoItem item = itemDao.readItem(idItem);
@@ -66,16 +84,16 @@ public class carritoManager {
     }
 
     /**
-     * Actualiza un item existente del carrito.
+     * Actualizar un ítem del carrito.
      */
-    public void actualizarItem(int idItem, int idCarrito, String tipo, int idProducto, int cantidad) {
-        carritoItem item = new carritoItem(idItem, idCarrito, tipo, idProducto, cantidad);
+    public void actualizarItem(int idItem, int idCarrito, String tipo, Integer idCancion, Integer idVinilo, Integer idMP3, int cantidad) {
+        carritoItem item = new carritoItem(idItem, idCarrito, tipo, idCancion, idVinilo, idMP3, cantidad);
         itemDao.updateItem(item);
         System.out.println("carritoManager -> actualizarItem: Item actualizado (ID: " + idItem + ")");
     }
 
     /**
-     * Elimina un item del carrito.
+     * Eliminar un ítem del carrito.
      */
     public void eliminarItem(int idItem) {
         itemDao.deleteItem(idItem);
@@ -83,7 +101,7 @@ public class carritoManager {
     }
 
     /**
-     * Elimina un carrito completo de la base de datos.
+     * Eliminar un carrito completo.
      */
     public void eliminarCarrito(int idCarrito) {
         carritoDao.deleteCarrito(idCarrito);
